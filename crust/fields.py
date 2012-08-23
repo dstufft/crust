@@ -18,3 +18,6 @@ class Field(object):
 
     def hydrate(self, value):
         return value
+
+    def dehydrate(self, value):
+        return value
