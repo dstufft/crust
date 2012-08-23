@@ -152,7 +152,7 @@ class Query(object):
         params["limit"] = 1
 
         r = self.resource._meta.api.http_resource("GET", self.resource._meta.resource_name, params=params)
-        data = self.resource._meta.api.resource_deserialize(r.content)
+        data = self.resource._meta.api.resource_deserialize(r.text)
 
         number = data["meta"]["total_count"]
 
