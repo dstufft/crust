@@ -41,6 +41,7 @@ class ResourceBase(type):
     """
     Metaclass for all Resources.
     """
+
     def __new__(cls, name, bases, attrs):
         super_new = super(ResourceBase, cls).__new__
 
