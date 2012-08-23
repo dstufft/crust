@@ -335,6 +335,33 @@ class QuerySet(object):
         """
         return self._clone()
 
+    def filter(self, **kwargs):
+        """
+        Returns a new QuerySet instance with the args ANDed to the existing
+        set.
+        """
+        if kwargs:
+            assert self.query.can_filter(), "Cannot filter a query once a slice has been taken."
+
+        clone = self._clone()
+        clone.query.add_filters(**kwargs)
+
+        return clone
+
+    def order_by(self, field_name=None):
+        """
+        Returns a new QuerySet instance with the ordering changed.
+        """
+        assert self.query.can_filter(), "Cannot reorder a query once a slice has been taken."
+
+        clone = self._clone()
+        clone.query.clear_ordering()
+
+        if field_name is not None:
+            clone.query.add_ordering(field_name)
+
+        return clone
+
     ###################
     # PRIVATE METHODS #
     ###################
