@@ -1,5 +1,8 @@
+from collections import OrderedDict
+
 from . import six
 from .exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from .fields import Field
 from .query import QuerySet
 from .utils import subclass_exception
 
@@ -10,6 +13,7 @@ class Options(object):
         self.api = None
         self.meta = meta
         self.resource_name = getattr(meta, "resource_name", None)
+        self.fields = OrderedDict()
 
     def contribute_to_class(self, cls, name):
         cls._meta = self
@@ -19,6 +23,16 @@ class Options(object):
             self.resource_name = cls.__name__.lower()
 
         self.api = self.meta.api
+
+        # Create the fields that are specified as strings
+        for fieldname in self.meta.fields:
+            self.add_field(Field(name=fieldname))
+
+    def add_field(self, field):
+        _fields = list(self.fields.items())
+        _fields.append((field.name, field))
+        _fields.sort(key=lambda x: x[1].creation_counter)
+        self.fields = OrderedDict(_fields)
 
 
 class ResourceBase(type):
@@ -70,9 +84,13 @@ class ResourceBase(type):
 
         new_class = new_class._meta.api.bind(new_class)
 
-        # Add all attributes to the class.
+        # Add all non-field attributes to the class.
         for obj_name, obj in attrs.items():
-            new_class.add_to_class(obj_name, obj)
+            if isinstance(obj, Field):
+                obj.name = obj_name
+                new_class._meta.add_field(obj)
+            else:
+                new_class.add_to_class(obj_name, obj)
 
         if not hasattr(new_class, "objects"):
             new_class.objects = QuerySet(new_class)
@@ -88,6 +106,18 @@ class ResourceBase(type):
 
 class Resource(six.with_metaclass(ResourceBase, object)):
 
+    def __init__(self, resource_uri=None, *args, **kwargs):
+        field_kwargs = dict([(k, v) for k, v in kwargs.items() if k in self._meta.fields])
+        kwargs = dict([(k, v) for k, v in kwargs.items() if k not in self._meta.fields])
+
+        super(Resource, self).__init__(*args, **kwargs)
+
+        self._resource_uri = resource_uri
+
+        for name, field in self._meta.fields.items():
+            val = field_kwargs.pop(name, None)
+            setattr(self, name, field.hydrate(val))
+
     def __repr__(self):
         try:
             u = six.text_type(self)
@@ -99,7 +129,3 @@ class Resource(six.with_metaclass(ResourceBase, object)):
         if not six.PY3 and hasattr(self, "__unicode__"):
             return self.encode("utf-8")
         return "%s object" % self.__class__.__name__
-
-    def _from_response_dict(self, response_dict):
-        for k, v in response_dict.items():
-            setattr(self, k, v)

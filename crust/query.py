@@ -327,8 +327,7 @@ class QuerySet(object):
         """
 
         for item in self.query.results():
-            obj = self.resource()
-            obj._from_response_dict(item)
+            obj = self.resource(**item)
 
             yield obj
 
