@@ -411,6 +411,21 @@ class QuerySet(object):
 
         return clone
 
+    ###################################
+    # PUBLIC INTROSPECTION ATTRIBUTES #
+    ###################################
+
+    @property
+    def ordered(self):
+        """
+        Returns True if the QuerySet is ordered -- i.e. has an order_by()
+        clause.
+        """
+        if self.query.order_by:
+            return True
+        else:
+            return False
+
     ###################
     # PRIVATE METHODS #
     ###################
