@@ -1,5 +1,5 @@
-Crust: Generic Tastypie API Client Framework
-============================================
+Crust: Framework for Tastypie API Clients
+=========================================
 
 Crust is a BSD licensed framework for creating clients for a Tastypie API.
 

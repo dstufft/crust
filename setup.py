@@ -6,7 +6,7 @@ setup(
     name="crust",
     version="0.1",
 
-    description="Tastypie API client",
+    description="Framework for Tastypie API Clients",
     long_description=open("README.rst").read(),
     url="https://github.com/dstufft/crust/",
     license=open("LICENSE").read(),
