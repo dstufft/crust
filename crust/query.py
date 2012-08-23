@@ -325,6 +325,18 @@ class QuerySet(object):
 
             yield obj
 
+    def count(self):
+        """
+        Returns the number of records as an integer.
+
+        If the QuerySet is already fully cached this simply returns the length
+        of the cached results set to avoid an api call.
+        """
+        if self._result_cache is not None and not self._iter:
+            return len(self._result_cache)
+
+        return self.query.get_count()
+
     ##################################################################
     # PUBLIC METHODS THAT ALTER ATTRIBUTES AND RETURN A NEW QUERYSET #
     ##################################################################
