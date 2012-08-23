@@ -1,0 +1,65 @@
+from . import six
+from .query import QuerySet
+
+
+class Options(object):
+
+    def __init__(self, meta):
+        self.api = None
+        self.meta = meta
+        self.resource_name = getattr(meta, "resource_name", None)
+
+    def contribute_to_class(self, cls, name):
+        cls._meta = self
+
+        if self.resource_name is None:
+            # Determine the resource_name from the class name
+            self.resource_name = cls.__name__.lower()
+
+        self.api = self.meta.api
+
+
+class ResourceBase(type):
+    """
+    Metaclass for all Resources.
+    """
+    def __new__(cls, name, bases, attrs):
+        super_new = super(ResourceBase, cls).__new__
+
+        # six.with_metaclass() inserts an extra class called 'NewBase' in the
+        # inheritance tree: Model -> NewBase -> object. Ignore this class.
+        parents = [b for b in bases if isinstance(b, ResourceBase) and not (b.__name__ == 'NewBase' and b.__mro__ == (b, object))]
+
+        if not parents:
+            # If this isn't a subclass of Resource, don't do anything special.
+            return super_new(cls, name, bases, attrs)
+
+        # Create the class
+        module = attrs.pop("__module__")
+        new_class = super_new(cls, name, bases, {"__module__": module})
+
+        attr_meta = attrs.pop("Meta", None)
+
+        if not attr_meta:
+            meta = getattr(new_class, "Meta", None)
+        else:
+            meta = attr_meta
+
+        new_class.add_to_class("_meta", Options(meta))
+
+        new_class = new_class._meta.api.bind(new_class)
+
+        if not hasattr(new_class, "objects"):
+            new_class.objects = QuerySet(new_class)
+
+        return new_class
+
+    def add_to_class(cls, name, value):
+        if hasattr(value, "contribute_to_class"):
+            value.contribute_to_class(cls, name)
+        else:
+            setattr(cls, name, value)
+
+
+class Resource(six.with_metaclass(ResourceBase, object)):
+    pass
