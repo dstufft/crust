@@ -18,6 +18,10 @@ class Api(object):
 
         self.session = session
 
+        # Initialize the APIs
+        for cls in self.resources.values():
+            cls._meta.api = self
+
     def __getattr__(self, name):
         if name in self.resources:
             return self.resources[name]
