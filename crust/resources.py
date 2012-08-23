@@ -15,7 +15,6 @@ class Options(object):
         self.meta = meta
         self.resource_name = getattr(meta, "resource_name", None)
         self.fields = OrderedDict()
-        self.primary_keys = []
 
     def contribute_to_class(self, cls, name):
         cls._meta = self
@@ -35,7 +34,6 @@ class Options(object):
         _fields.append((field.name, field))
         _fields.sort(key=lambda x: x[1].creation_counter)
         self.fields = OrderedDict(_fields)
-        self.primary_keys = [f.name for f in self.fields.values() if f.primary_key]
 
 
 class ResourceBase(type):
