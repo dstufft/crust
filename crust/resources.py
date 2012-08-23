@@ -49,6 +49,10 @@ class ResourceBase(type):
 
         new_class = new_class._meta.api.bind(new_class)
 
+        # Add all attributes to the class.
+        for obj_name, obj in attrs.items():
+            new_class.add_to_class(obj_name, obj)
+
         if not hasattr(new_class, "objects"):
             new_class.objects = QuerySet(new_class)
 
