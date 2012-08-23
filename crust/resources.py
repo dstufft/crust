@@ -78,3 +78,7 @@ class Resource(six.with_metaclass(ResourceBase, object)):
         if not six.PY3 and hasattr(self, "__unicode__"):
             return self.encode("utf-8")
         return "%s object" % self.__class__.__name__
+
+    def _from_response_dict(self, response_dict):
+        for k, v in response_dict.items():
+            setattr(self, k, v)
