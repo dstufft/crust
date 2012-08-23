@@ -377,6 +377,26 @@ class QuerySet(object):
         obj.save(force_insert=True)
         return obj
 
+    def get_or_create(self, **kwargs):
+        """
+        Looks up an object with the given kwargs, creating one if necessary.
+        Returns a tuple of (object, created), where created is a boolean
+        specifying whether an object was created.
+        """
+        assert kwargs, "get_or_create() must be passed at least one keyword argument"
+
+        defaults = kwargs.pop("defaults", {})
+        lookup = kwargs.copy()
+
+        try:
+            return self.get(**lookup), False
+        except self.resource.DoesNotExist:
+            params = dict([(k, v) for k, v in kwargs.items()])
+            params.update(defaults)
+
+            obj = self.create(**params)
+            return obj, True
+
     def exists(self):
         if self._result_cache is None:
             return self.query.has_results()
