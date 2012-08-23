@@ -156,10 +156,10 @@ class Resource(six.with_metaclass(ResourceBase, object)):
 
         if insert:
             resources = [self._meta.resource_name]
-            r = self._meta.api.http_resource("POST", resources, data=self._api.resource_serialize(data))
+            r = self._meta.api.http_resource("POST", resources, data=self._meta.api.resource_serialize(data))
         else:
             resources = [self._meta.resource_name] + [self._meta.fields[name].dehydrate(getattr(self, name, None)) for name in self._meta.primary_keys]
-            r = self._meta.api.http_resource("PUT", resources, data=self._api.resource_serialize(data))
+            r = self._meta.api.http_resource("PUT", resources, data=self._meta.api.resource_serialize(data))
 
         if "Location" in r.headers:
             r = self._meta.api.http_resource("GET", self._meta.resource_name, url=r.headers["Location"])
