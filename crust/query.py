@@ -172,6 +172,13 @@ class Query(object):
         """
         return not self.low_mark and self.high_mark is None
 
+    def has_results(self):
+        q = self.clone()
+        q.clear_ordering()
+        q.set_limits(high=1)
+
+        return bool(list(q.results()))
+
 
 class QuerySet(object):
     """
@@ -361,6 +368,11 @@ class QuerySet(object):
             "get() returned more than one %s -- it returned %s! "
             "Lookup parameters were %s" %
             (self.resource._meta.resource_name, num, kwargs))
+
+    def exists(self):
+        if self._result_cache is None:
+            return self.query.has_results()
+        return bool(self._result_cache)
 
     ##################################################################
     # PUBLIC METHODS THAT ALTER ATTRIBUTES AND RETURN A NEW QUERYSET #
