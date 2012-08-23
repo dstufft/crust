@@ -368,6 +368,15 @@ class QuerySet(object):
             "Lookup parameters were %s" %
             (self.resource._meta.resource_name, num, kwargs))
 
+    def create(self, **kwargs):
+        """
+        Creates a new object with the given kwargs, saving it to the api
+        and returning the created object.
+        """
+        obj = self.resource(**kwargs)
+        obj.save(force_insert=True)
+        return obj
+
     def exists(self):
         if self._result_cache is None:
             return self.query.has_results()
