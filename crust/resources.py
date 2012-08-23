@@ -26,7 +26,7 @@ class Options(object):
         self.api = self.meta.api
 
         # Create the fields that are specified as strings
-        for fieldname in self.meta.fields:
+        for fieldname in getattr(self.meta, "fields", []):
             self.add_field(Field(name=fieldname))
 
     def add_field(self, field):
