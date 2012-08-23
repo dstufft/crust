@@ -3,7 +3,6 @@ from collections import OrderedDict
 from . import six
 from .exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from .fields import Field
-from .requests import HTTPError
 from .query import QuerySet
 from .utils import subclass_exception
 
