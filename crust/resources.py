@@ -3,6 +3,7 @@ from collections import OrderedDict
 from . import six
 from .exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from .fields import Field
+from .requests import HTTPError
 from .query import QuerySet
 from .utils import subclass_exception
 
@@ -115,7 +116,7 @@ class Resource(six.with_metaclass(ResourceBase, object)):
 
         super(Resource, self).__init__(*args, **kwargs)
 
-        self._resource_uri = resource_uri
+        self.resource_uri = resource_uri
 
         for name, field in self._meta.fields.items():
             val = field_kwargs.pop(name, None)
@@ -132,3 +133,38 @@ class Resource(six.with_metaclass(ResourceBase, object)):
         if not six.PY3 and hasattr(self, "__unicode__"):
             return self.encode("utf-8")
         return "%s object" % self.__class__.__name__
+
+    def save(self, force_insert=False, force_update=False):
+        """
+        Saves the current instance. Override this in a subclass if you want to
+        control the saving process.
+
+        The 'force_insert' and 'force_update' parameters can be used to insist
+        that the "save" must be a POST or PUT respectively. Normally, they
+        should not be set.
+        """
+        if force_insert and force_update:
+            raise ValueError("Cannot force both insert and updating in resource saving.")
+
+        data = {}
+
+        for name, field in self._meta.fields.items():
+            if field.serialize:
+                data[name] = field.dehydrate(getattr(self, name, None))
+
+        insert = True if force_insert or self.resource_uri is None else False
+
+        if insert:
+            resources = [self._meta.resource_name]
+            r = self._meta.api.http_resource("POST", resources, data=self._api.resource_serialize(data))
+        else:
+            resources = [self._meta.resource_name] + [self._meta.fields[name].dehydrate(getattr(self, name, None)) for name in self._meta.primary_keys]
+            r = self._meta.api.http_resource("PUT", resources, data=self._api.resource_serialize(data))
+
+        if "Location" in r.headers:
+            r = self._meta.api.http_resource("GET", self._meta.resource_name, url=r.headers["Location"])
+
+        data = self._meta.api.resource_deserialize(r.text)
+
+        # Update local values from the API Response
+        self.__init__(**data)
