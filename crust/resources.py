@@ -62,4 +62,15 @@ class ResourceBase(type):
 
 
 class Resource(six.with_metaclass(ResourceBase, object)):
-    pass
+
+    def __repr__(self):
+        try:
+            u = six.text_type(self)
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            u = "[Bad Unicode data]"
+        return "<%s: %s>" % (self.__class__.__name__, u)
+
+    def __str__(self):
+        if not six.PY3 and hasattr(self, "__unicode__"):
+            return self.encode("utf-8")
+        return "%s object" % self.__class__.__name__
