@@ -1,5 +1,7 @@
 from . import six
+from .exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from .query import QuerySet
+from .utils import subclass_exception
 
 
 class Options(object):
@@ -46,6 +48,25 @@ class ResourceBase(type):
             meta = attr_meta
 
         new_class.add_to_class("_meta", Options(meta))
+
+        new_class.add_to_class(
+                    "DoesNotExist",
+                    subclass_exception(
+                        str("DoesNotExist"),
+                        tuple(x.DoesNotExist for x in parents if hasattr(x, "_meta")) or (ObjectDoesNotExist,),
+                        module,
+                        attached_to=new_class
+                    )
+                )
+        new_class.add_to_class(
+                    "MultipleObjectsReturned",
+                    subclass_exception(
+                        str("MultipleObjectsReturned"),
+                        tuple(x.MultipleObjectsReturned for x in parents if hasattr(x, "_meta")) or (MultipleObjectsReturned,),
+                        module,
+                        attached_to=new_class
+                    )
+                )
 
         new_class = new_class._meta.api.bind(new_class)
 
