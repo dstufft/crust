@@ -1,8 +1,7 @@
 import json
-import posixpath
+import urllib.parse
 
 from . import requests
-from . import six
 from .exceptions import ResponseError
 
 
@@ -53,20 +52,14 @@ class Api(object):
         except ValueError:
             raise ResponseError("The API Response was not valid.")
 
-    def url_for(self, *args):
-        args = [str(arg) for arg in args]
-        path = posixpath.join(*args)
-        return "/".join([self.url, path]) + "/"
-
-    def http_resource(self, method, resource, url=None, params=None, data=None):
+    def http_resource(self, method, url, params=None, data=None):
         """
         Makes an HTTP request.
         """
 
-        if isinstance(resource, six.string_types):
-            resource = [resource]
+        url = urllib.parse.urljoin(self.url, url)
+        url = url if url.endswith("/") else url + "/"
 
-        url = url or self.url_for(*resource)
         r = self.session.request(method, url, params=params, data=data)
 
         r.raise_for_status()
