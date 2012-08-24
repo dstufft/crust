@@ -54,7 +54,7 @@ class DateTimeField(Field):
         return value
 
 
-class ToOneField(Field):
+class RelatedField(Field):
 
     def __init__(self, resource, lazy=True, *args, **kwargs):
         super(ToOneField, self).__init__(*args, **kwargs)
@@ -70,6 +70,9 @@ class ToOneField(Field):
             self._resource = getattr(mod, class_name)
 
         return self._resource
+
+
+class ToOneField(RelatedField):
 
     def hydrate(self, value):
         if self.lazy:
@@ -90,3 +93,35 @@ class ToOneField(Field):
             raise FieldError("Cannot dehydrate a resource without a resource_uri")
 
         return value.resource_uri
+
+
+class ToManyField(RelatedField):
+
+    def hydrate(self, value):
+        if self.lazy:
+            from .resources import LazyResource
+            return [LazyResource(self.resource_class, url) for url in value]
+        else:
+            hydrated = []
+
+            for url in value:
+                r = self.resource_class._meta.api.http_resource("GET", url)
+                data = self.resource_class._meta.api.resource_deserialize(r.text)
+                hydrated.append(self.resource_class(**data))
+
+            return hydrated
+
+    def dehydrate(self, value):
+        from .resources import LazyResource
+
+        dehydrated = []
+
+        for item in value:
+            if isinstance(item, LazyResource):
+                dehydrated.append(item._lazy_state["url"])
+            else:
+                if item.resource_uri is None:
+                    raise FieldError("Cannot dehydrate a resource without a resource_uri")
+                dehydrated.append(item.resource_uri)
+
+        return dehydrated
