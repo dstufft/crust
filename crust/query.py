@@ -131,6 +131,15 @@ class Query(object):
                 rnum += 1
                 yield item
 
+    def delete(self):
+        """
+        Deletes the results of this query, it first fetches all the items to be
+        deletes and then issues a PATCH against the list uri of the resource.
+        """
+        uris = [obj.resource_uri for obj in self.results()]
+        self.resource._meta.api.http_resource("PATCH", self.resource._meta.resource_name, data={"objects": [], "deleted_objects": uris})
+        return len(uris)
+
     def get_params(self):
         params = {}
 
@@ -396,6 +405,19 @@ class QuerySet(object):
 
             obj = self.create(**params)
             return obj, True
+
+    def delete(self):
+        """
+        Deletes the records in the current QuerySet.
+        """
+        assert self.query.can_filter(), "Cannot use 'limit' or 'offset' with delete."
+
+        del_query = self._clone()
+
+        # Disable non-supported fields.
+        del_query.query.clear_ordering()
+
+        return del_query.query.delete()
 
     def exists(self):
         if self._result_cache is None:
