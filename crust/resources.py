@@ -163,3 +163,13 @@ class Resource(six.with_metaclass(ResourceBase, object)):
 
         # Update local values from the API Response
         self.__init__(**data)
+
+    def delete(self):
+        """
+        Deletes the current instance. Override this in a subclass if you want to
+        control the deleting process.
+        """
+        if self.resource_uri is None:
+            raise ValueError("{0} object cannot be deleted because resource_uri attribute cannot be None".format(self._meta.resource_name))
+
+        self._meta.api.http_resource("DELETE", self.resource_uri)
