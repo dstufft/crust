@@ -173,3 +173,25 @@ class Resource(six.with_metaclass(ResourceBase, object)):
             raise ValueError("{0} object cannot be deleted because resource_uri attribute cannot be None".format(self._meta.resource_name))
 
         self._meta.api.http_resource("DELETE", self.resource_uri)
+
+
+class LazyResource(object):
+
+    def __init__(self, cls, url):
+        self._lazy_state = {"cls": cls, "url": url}
+
+    def __repr__(self):
+        return "<LazyResource {object_name}({url})>".format(object_name=self._lazy_state["cls"].__class__.__name__, url=self._lazy_state["url"])
+
+    def __getattr__(self, name):
+        cls = self._lazy_state["cls"]
+
+        r = cls._meta.api.http_resource("GET", self._lazy_state["url"])
+        data = cls._meta.api.resource_deserialize(r.text)
+
+        obj = cls(**data)
+
+        self.__class__ = obj.__class__
+        self.__dict__ = obj.__dict__
+
+        return getattr(obj, name)
