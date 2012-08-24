@@ -57,7 +57,7 @@ class DateTimeField(Field):
 class RelatedField(Field):
 
     def __init__(self, resource, lazy=True, *args, **kwargs):
-        super(ToOneField, self).__init__(*args, **kwargs)
+        super(RelatedField, self).__init__(*args, **kwargs)
 
         self.lazy = lazy
         self._resource = resource
