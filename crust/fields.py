@@ -45,3 +45,9 @@ class DateTimeField(Field):
                 raise FieldError("Datetime provided to '%s' field doesn't appear to be a valid datetime string: '%s'" % (self.name, value))
 
         return value
+
+    def dehydrate(self, value):
+        if isinstance(value, datetime.datetime):
+            return value.isoformat()
+
+        return value

@@ -8,6 +8,7 @@ from .exceptions import ResponseError
 class Api(object):
 
     resources = {}
+
     unsupported_methods = []
 
     def __init__(self, session=None, *args, **kwargs):
