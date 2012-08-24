@@ -1,8 +1,13 @@
 import json
-import urllib.parse
 
+from . import six
 from . import requests
 from .exceptions import ResponseError
+
+if six.PY3:
+    import urllib.parse as urllib_parse
+else:
+    import urlparse as urllib_parse
 
 
 class Api(object):
@@ -61,7 +66,7 @@ class Api(object):
         Makes an HTTP request.
         """
 
-        url = urllib.parse.urljoin(self.url, url)
+        url = urllib_parse.urljoin(self.url, url)
         url = url if url.endswith("/") else url + "/"
 
         headers = None
