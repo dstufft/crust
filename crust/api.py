@@ -8,6 +8,7 @@ from .exceptions import ResponseError
 class Api(object):
 
     resources = {}
+    unsupported_methods = []
 
     def __init__(self, session=None, *args, **kwargs):
         super(Api, self).__init__(*args, **kwargs)
@@ -16,6 +17,8 @@ class Api(object):
             session = requests.session()
 
         self.session = session
+
+        self.unsupported_methods = [method.lower() for method in self.unsupported_methods]
 
         # Initialize the APIs
         for cls in self.resources.values():
@@ -60,7 +63,13 @@ class Api(object):
         url = urllib.parse.urljoin(self.url, url)
         url = url if url.endswith("/") else url + "/"
 
-        r = self.session.request(method, url, params=params, data=data)
+        headers = None
+
+        if method.lower() in self.unsupported_methods:
+            headers = {"X-HTTP-Method-Override": method.upper()}
+            method = "POST"
+
+        r = self.session.request(method, url, params=params, data=data, headers=headers)
 
         r.raise_for_status()
 
