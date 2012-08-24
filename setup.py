@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="crust",
-    version="0.1",
+    version="0.2",
 
     description="Framework for Tastypie API Clients",
     long_description=open("README.rst").read(),
