@@ -1,4 +1,5 @@
 import datetime
+import importlib
 import re
 
 from . import six
@@ -51,3 +52,41 @@ class DateTimeField(Field):
             return value.isoformat()
 
         return value
+
+
+class ToOneField(Field):
+
+    def __init__(self, resource, lazy=True, *args, **kwargs):
+        super(ToOneField, self).__init__(*args, **kwargs)
+
+        self.lazy = lazy
+        self._resource = resource
+
+    @property
+    def resource_class(self):
+        if isinstance(self._resource, six.string_types):
+            modname, class_name = self._resource.rsplit(".", 1)
+            mod = importlib.import_module(modname)
+            self._resource = getattr(mod, class_name)
+
+        return self._resource
+
+    def hydrate(self, value):
+        if self.lazy:
+            from .resources import LazyResource
+            return LazyResource(self.resource_class, value)
+        else:
+            r = self.resource_class._meta.api.http_resource("GET", value)
+            data = self.resource_class._meta.api.resource_deserialize(r.text)
+            return self.resource_class(**data)
+
+    def dehydrate(self, value):
+        from .resources import LazyResource
+
+        if isinstance(value, LazyResource):
+            return self._lazy_state["url"]
+
+        if value.resource_uri is None:
+            raise FieldError("Cannot dehydrate a resource without a resource_uri")
+
+        return value.resource_uri
