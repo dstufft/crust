@@ -75,6 +75,9 @@ class RelatedField(Field):
 class ToOneField(RelatedField):
 
     def hydrate(self, value):
+        if value is None:
+            return value
+
         if self.lazy:
             from .resources import LazyResource
             return LazyResource(self.resource_class, value)
@@ -85,6 +88,9 @@ class ToOneField(RelatedField):
 
     def dehydrate(self, value):
         from .resources import LazyResource
+
+        if value is None:
+            return value
 
         if isinstance(value, LazyResource):
             return self._lazy_state["url"]
@@ -98,6 +104,9 @@ class ToOneField(RelatedField):
 class ToManyField(RelatedField):
 
     def hydrate(self, value):
+        if value is None:
+            return value
+
         if self.lazy:
             from .resources import LazyResource
             return [LazyResource(self.resource_class, url) for url in value]
@@ -113,6 +122,9 @@ class ToManyField(RelatedField):
 
     def dehydrate(self, value):
         from .resources import LazyResource
+
+        if value is None:
+            return value
 
         dehydrated = []
 
