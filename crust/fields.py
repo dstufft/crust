@@ -96,7 +96,7 @@ class ToOneField(RelatedField):
             return value
 
         if isinstance(value, LazyResource):
-            return self._lazy_state["url"]
+            return value._lazy_state["url"]
 
         if value.resource_uri is None:
             raise FieldError("Cannot dehydrate a resource without a resource_uri")
