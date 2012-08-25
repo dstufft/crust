@@ -108,15 +108,10 @@ class ResourceBase(type):
 class Resource(six.with_metaclass(ResourceBase, object)):
 
     def __init__(self, resource_uri=None, *args, **kwargs):
-        field_kwargs = dict([(k, v) for k, v in kwargs.items() if k in self._meta.fields])
-        kwargs = dict([(k, v) for k, v in kwargs.items() if k not in self._meta.fields])
-
-        super(Resource, self).__init__(*args, **kwargs)
-
         self.resource_uri = resource_uri
 
         for name, field in self._meta.fields.items():
-            val = field_kwargs.pop(name, None)
+            val = kwargs.pop(name, None)
             setattr(self, name, field.hydrate(val))
 
     def __repr__(self):
