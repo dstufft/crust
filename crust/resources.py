@@ -147,14 +147,18 @@ class Resource(six.with_metaclass(ResourceBase, object)):
         insert = True if force_insert or self.resource_uri is None else False
 
         if insert:
-            r = self._meta.api.http_resource("POST", self._meta.resource_name, data=self._meta.api.resource_serialize(data))
+            resp = self._meta.api.http_resource("POST", self._meta.resource_name, data=self._meta.api.resource_serialize(data))
         else:
-            r = self._meta.api.http_resource("PUT", self.resource_uri, data=self._meta.api.resource_serialize(data))
+            resp = self._meta.api.http_resource("PUT", self.resource_uri, data=self._meta.api.resource_serialize(data))
 
-        if "Location" in r.headers:
-            r = self._meta.api.http_resource("GET", r.headers["Location"])
+        if "Location" in resp.headers:
+            resp = self._meta.api.http_resource("GET", resp.headers["Location"])
+        elif resp.status_code == 204:
+            resp = self._meta.api.http_resource("GET", self.resource_uri)
+        else:
+            return
 
-        data = self._meta.api.resource_deserialize(r.text)
+        data = self._meta.api.resource_deserialize(resp.text)
 
         # Update local values from the API Response
         self.__init__(**data)
