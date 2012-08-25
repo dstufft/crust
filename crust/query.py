@@ -136,8 +136,10 @@ class Query(object):
         Deletes the results of this query, it first fetches all the items to be
         deletes and then issues a PATCH against the list uri of the resource.
         """
-        uris = [obj.resource_uri for obj in self.results()]
-        self.resource._meta.api.http_resource("PATCH", self.resource._meta.resource_name, data={"objects": [], "deleted_objects": uris})
+        uris = [obj["resource_uri"] for obj in self.results()]
+        data = self.resource._meta.api.resource_serialize({"objects": [], "deleted_objects": uris})
+        self.resource._meta.api.http_resource("PATCH", self.resource._meta.resource_name, data=data)
+
         return len(uris)
 
     def get_params(self):
