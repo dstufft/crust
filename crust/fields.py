@@ -78,6 +78,9 @@ class ToOneField(RelatedField):
         if value is None:
             return value
 
+        if isinstance(value, self.resource_class):
+            return value
+
         if self.lazy:
             from .resources import LazyResource
             return LazyResource(self.resource_class, value)
