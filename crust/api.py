@@ -30,11 +30,16 @@ class Api(object):
         for cls in self.resources.values():
             cls._meta.api = self
 
+        self.configure()
+
     def __getattr__(self, name):
         if name in self.resources:
             return self.resources[name]
 
         raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__, name))
+
+    def configure(self):
+        self.session.headers.update({"Content-Type": "application/json", "Accept": "application/json"})
 
     @classmethod
     def bind(cls, resource):
